@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package ecommerce;
+
+message ErrorResponse {
+  string message = 1;
+  string details = 2;
+}
+
+message MetaResponse {
+  Pagination pagination = 1;
+
+  message Pagination {
+    int32 total = 1;
+    int32 page = 2;
+    int32 limit = 3;
+  }
+}
+
+// User Management Service
+service UserService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string role = 3;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  int32 code = 2;
+  UserData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message UserData {
+    string userId = 1;
+  }
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool success = 1;
+  int32 code = 2;
+  LoginData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message LoginData {
+    string token = 1;
+  }
+}
+
+// Product Catalog Service
+service ProductService {
+  rpc AddProduct (AddProductRequest) returns (AddProductResponse);
+  rpc GetProduct (GetProductRequest) returns (GetProductResponse);
+  rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
+}
+
+message AddProductRequest {
+  string name = 1;
+  double price = 2;
+  string description = 3;
+  int32 stock = 4;
+  string sellerId = 5;
+}
+
+message AddProductResponse {
+  bool success = 1;
+  int32 code = 2;
+  ProductData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+}
+
+message ProductData {
+  string productId = 1;
+}
+
+message GetProductRequest {
+  string productId = 1;
+}
+
+message GetProductResponse {
+  bool success = 1;
+  int32 code = 2;
+  ProductDetails data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+}
+
+message ProductDetails {
+  string name = 1;
+  double price = 2;
+  string description = 3;
+  int32 stock = 4;
+  string sellerId = 5;
+}
+
+message GetAllProductsRequest {
+  int32 page = 1;
+}
+
+message GetAllProductsResponse {
+  bool success = 1;
+  int32 code = 2;
+  repeated Products data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message Products {
+    string productId = 1;
+    string name = 2;
+    double price = 3;
+    string description = 4;
+    int32 stock = 5;
+    string sellerId = 6;
+  }
+}
+
+// Orders and Payments Service
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+message CreateOrderRequest {
+  string userId = 1;
+  string productId = 2;
+  int32 quantity = 3;
+}
+
+message CreateOrderResponse {
+  bool success = 1;
+  int32 code = 2;
+  OrderData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message OrderData {
+    string orderId = 1;
+  }
+}

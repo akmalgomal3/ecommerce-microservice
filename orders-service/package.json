@@ -1,0 +1,13 @@
+{
+  "name": "orders-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && if not exist dist\\src\\proto mkdir dist\\src\\proto && xcopy src\\proto dist\\src\\proto /E /I",
+    "start": "npm run build && node dist/orders-service/src/main.js",
+    "start:dev": "nest start --watch"
+  },
+  "private": true
+}
