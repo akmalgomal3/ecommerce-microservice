@@ -1,11 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { UserService } from './users.service';
-import { ecommerce } from '../../../proto/ecommerce';
-import RegisterRequest = ecommerce.RegisterRequest;
-import RegisterResponse = ecommerce.RegisterResponse;
-import LoginRequest = ecommerce.LoginRequest;
-import LoginResponse = ecommerce.LoginResponse;
+import { user } from '../../../proto/user';
+import RegisterRequest = user.RegisterRequest;
+import RegisterResponse = user.RegisterResponse;
+import LoginRequest = user.LoginRequest;
+import LoginResponse = user.LoginResponse;
+import { createResponse } from '../../../common/response/response.util';
 
 @Controller()
 export class UserController {
@@ -18,15 +19,9 @@ export class UserController {
       data.password,
       data.role,
     );
-    return {
-      success: true,
-      code: 201,
-      data: {
-        userId: response.id,
-      },
-      error: null,
-      meta: null,
-    };
+    return createResponse(true, 201, {
+      userId: response.id,
+    });
   }
 
   @GrpcMethod('UserService', 'Login')
@@ -37,26 +32,14 @@ export class UserController {
     );
     if (response) {
       const token = await this.userService.login(response);
-      return {
-        success: true,
-        code: 200,
-        data: {
-          token: token.access_token,
-        },
-        error: null,
-        meta: null,
-      };
+      return createResponse(true, 200, {
+        token: token.access_token,
+      });
     } else {
-      return {
-        success: false,
-        code: 401,
-        data: null,
-        error: {
-          message: 'Invalid credentials',
-          details: null,
-        },
-        meta: null,
-      };
+      return createResponse(false, 401, null, {
+        message: 'Invalid credentials',
+        details: null,
+      });
     }
   }
 }

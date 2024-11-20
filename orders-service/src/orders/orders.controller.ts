@@ -1,10 +1,11 @@
 import { Controller, SetMetadata, UseGuards } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { OrderService } from './orders.service';
-import { ecommerce } from '../../../proto/ecommerce';
-import CreateOrderRequest = ecommerce.CreateOrderRequest;
+import { order } from '../../../proto/order';
+import CreateOrderRequest = order.CreateOrderRequest;
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
+import { createResponse } from '../../../common/response/response.util';
 
 @Controller('orders-service/v1')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,26 +21,14 @@ export class OrderController {
       data.quantity,
     );
     if (response) {
-      return {
-        success: true,
-        code: 201,
-        data: {
-          orderId: response.id,
-        },
-        error: null,
-        meta: null,
-      };
+      return createResponse(true, 201, {
+        orderId: response.id,
+      });
     } else {
-      return {
-        success: false,
-        code: 400,
-        data: null,
-        error: {
-          message: 'Failed to create order',
-          details: null,
-        },
-        meta: null,
-      };
+      return createResponse(false, 400, null, {
+        message: 'Failed to create order',
+        details: null,
+      });
     }
   }
 }

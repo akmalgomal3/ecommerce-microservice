@@ -1,74 +1,74 @@
 import { Controller, SetMetadata, UseGuards } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { ProductService } from './products.service';
-import { ecommerce } from '../../../proto/ecommerce';
-import AddProductRequest = ecommerce.AddProductRequest;
-import AddProductResponse = ecommerce.AddProductResponse;
-import GetProductRequest = ecommerce.GetProductRequest;
-import GetProductResponse = ecommerce.GetProductResponse;
-import GetAllProductsResponse = ecommerce.GetAllProductsResponse;
-import GetAllProductsRequest = ecommerce.GetAllProductsRequest;
+import { product } from '../../../proto/product';
+import AddProductRequest = product.AddProductRequest;
+import AddProductResponse = product.AddProductResponse;
+import GetProductRequest = product.GetProductRequest;
+import GetProductResponse = product.GetProductResponse;
+import GetAllProductsResponse = product.GetAllProductsResponse;
+import GetAllProductsRequest = product.GetAllProductsRequest;
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { JwtStrategy } from '../../../common/guards/jwt.strategy';
 import { RolesGuard } from '../../../common/guards/roles.guard';
+import { createResponse } from '../../../common/response/response.util';
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductController {
-  constructor(
-    private readonly productService: ProductService,
-    private readonly jwtStrategy: JwtStrategy,
-  ) {}
+  constructor(private readonly productService: ProductService) {}
 
   @GrpcMethod('ProductService', 'AddProduct')
   @SetMetadata('role', ['seller'])
   async addProduct(data: AddProductRequest): Promise<AddProductResponse> {
-    const response = await this.productService.addProduct(
-      data.name,
-      data.price,
-      data.description,
-      data.stock,
-      data.sellerId,
-    );
-    return {
-      success: true,
-      code: 201,
-      data: {
+    if (data.price <= 0) {
+      return createResponse(false, 400, null, {
+        message: 'Price must be greater than 0',
+        details: { field: 'price', value: data.price },
+      });
+    }
+
+    if (data.stock <= 0) {
+      return createResponse(false, 400, null, {
+        message: 'Stock must be greater than 0',
+        details: { field: 'stock', value: data.stock },
+      });
+    }
+    try {
+      const response = await this.productService.addProduct(
+        data.name,
+        data.price,
+        data.description,
+        data.stock,
+        data.sellerId,
+      );
+      return createResponse(true, 201, {
+        message: 'Product Added',
         productId: response.id,
-      },
-      error: null,
-      meta: null,
-    };
+      });
+    } catch (e) {
+      return createResponse(false, 400, null, {
+        message: 'Failed to add new product!',
+        details: e,
+      });
+    }
   }
 
   @GrpcMethod('ProductService', 'GetProduct')
   async getProduct(data: GetProductRequest): Promise<GetProductResponse> {
     const response = await this.productService.getProductById(data.productId);
     if (response) {
-      return {
-        success: true,
-        code: 200,
-        data: {
-          name: response.name,
-          price: response.price,
-          description: response.description,
-          stock: response.stock,
-          sellerId: response.seller_id,
-        },
-        error: null,
-        meta: null,
-      };
+      return createResponse(true, 200, {
+        name: response.name,
+        price: response.price,
+        description: response.description,
+        stock: response.stock,
+        sellerId: response.seller_id,
+      });
     } else {
-      return {
-        success: false,
-        code: 404,
-        data: null,
-        error: {
-          message: 'Product not found',
-          details: null,
-        },
-        meta: null,
-      };
+      return createResponse(false, 400, null, {
+        message: 'Product not found',
+        details: null,
+      });
     }
   }
 
@@ -91,18 +91,12 @@ export class ProductController {
       stock: product.stock,
       sellerId: product.sellerid,
     }));
-    return {
-      success: true,
-      code: 200,
-      data: productsData,
-      error: null,
-      meta: {
-        pagination: {
-          total: totalProducts,
-          page: page,
-          limit: limit,
-        },
+    return createResponse(true, 200, productsData, null, {
+      pagination: {
+        total: totalProducts,
+        page: page,
+        limit: limit,
       },
-    };
+    });
   }
 }

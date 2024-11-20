@@ -9,8 +9,8 @@ async function bootstrap() {
     {
       transport: Transport.GRPC,
       options: {
-        package: 'ecommerce',
-        protoPath: join('../proto/ecommerce.proto'),
+        package: 'product',
+        protoPath: join('../proto/product.proto'),
         url: 'localhost:3002',
       },
     },

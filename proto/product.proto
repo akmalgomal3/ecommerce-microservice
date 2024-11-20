@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package ecommerce;
+package product;
 
 message ErrorResponse {
   string message = 1;
@@ -16,49 +16,6 @@ message MetaResponse {
     int32 limit = 3;
   }
 }
-
-// User Management Service
-service UserService {
-  rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc Login (LoginRequest) returns (LoginResponse);
-}
-
-message RegisterRequest {
-  string username = 1;
-  string password = 2;
-  string role = 3;
-}
-
-message RegisterResponse {
-  bool success = 1;
-  int32 code = 2;
-  UserData data = 3;
-  ErrorResponse error = 4;
-  MetaResponse meta = 5;
-
-  message UserData {
-    string userId = 1;
-  }
-}
-
-message LoginRequest {
-  string username = 1;
-  string password = 2;
-}
-
-message LoginResponse {
-  bool success = 1;
-  int32 code = 2;
-  LoginData data = 3;
-  ErrorResponse error = 4;
-  MetaResponse meta = 5;
-
-  message LoginData {
-    string token = 1;
-  }
-}
-
-// Product Catalog Service
 service ProductService {
   rpc AddProduct (AddProductRequest) returns (AddProductResponse);
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
@@ -123,28 +80,5 @@ message GetAllProductsResponse {
     string description = 4;
     int32 stock = 5;
     string sellerId = 6;
-  }
-}
-
-// Orders and Payments Service
-service OrderService {
-  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
-}
-
-message CreateOrderRequest {
-  string userId = 1;
-  string productId = 2;
-  int32 quantity = 3;
-}
-
-message CreateOrderResponse {
-  bool success = 1;
-  int32 code = 2;
-  OrderData data = 3;
-  ErrorResponse error = 4;
-  MetaResponse meta = 5;
-
-  message OrderData {
-    string orderId = 1;
   }
 }

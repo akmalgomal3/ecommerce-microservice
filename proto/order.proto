@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package order;
+
+message ErrorResponse {
+  string message = 1;
+  string details = 2;
+}
+
+message MetaResponse {
+  Pagination pagination = 1;
+
+  message Pagination {
+    int32 total = 1;
+    int32 page = 2;
+    int32 limit = 3;
+  }
+}
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+message CreateOrderRequest {
+  string userId = 1;
+  string productId = 2;
+  int32 quantity = 3;
+}
+
+message CreateOrderResponse {
+  bool success = 1;
+  int32 code = 2;
+  OrderData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message OrderData {
+    string orderId = 1;
+  }
+}
