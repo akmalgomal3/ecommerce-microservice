@@ -20,6 +20,7 @@ service ProductService {
   rpc AddProduct (AddProductRequest) returns (AddProductResponse);
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
+  rpc UpdateProduct (UpdateProductRequest) returns (UpdateProductResponse);
 }
 
 message AddProductRequest {
@@ -80,5 +81,30 @@ message GetAllProductsResponse {
     string description = 4;
     int32 stock = 5;
     string sellerId = 6;
+  }
+}
+
+message UpdateProductRequest {
+  string productId = 1;
+  optional string name = 2;
+  optional double price = 3;
+  optional string description = 4;
+  optional int32 stock = 5;
+}
+
+message UpdateProductResponse {
+  bool success = 1;
+  int32 code = 2;
+  ProductUpdated data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message ProductUpdated {
+    string productId = 1;
+    string name = 2;
+    double price = 3;
+    string description = 4;
+    int32 stock = 5;
+    string updatedAt = 6;
   }
 }

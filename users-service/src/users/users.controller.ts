@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, SetMetadata, UseGuards } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { UserService } from './users.service';
 import { user } from '../../../proto/user';
@@ -7,6 +7,10 @@ import RegisterResponse = user.RegisterResponse;
 import LoginRequest = user.LoginRequest;
 import LoginResponse = user.LoginResponse;
 import { createResponse } from '../../../common/response/response.util';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import DeleteUserRequest = user.DeleteUserRequest;
+import DeleteUserResponse = user.DeleteUserResponse;
 
 @Controller()
 export class UserController {
@@ -38,6 +42,23 @@ export class UserController {
     } else {
       return createResponse(false, 401, null, {
         message: 'Invalid credentials',
+        details: null,
+      });
+    }
+  }
+
+  @GrpcMethod('UserService', 'DeleteUser')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('role', ['admin'])
+  async deleteUser(data: DeleteUserRequest): Promise<DeleteUserResponse> {
+    const response = await this.userService.deleteUser(data.username);
+    if (response) {
+      return createResponse(true, 200, {
+        userId: response.id,
+      });
+    } else {
+      return createResponse(false, 401, null, {
+        message: 'Delete User Failed!',
         details: null,
       });
     }

@@ -19,3 +19,14 @@ FROM productsMs
 
 /* @name GetTotalProductsCount */
 SELECT COUNT(*) FROM productsMs;
+
+/* @name UpdateProduct */
+UPDATE productsMs
+SET
+    name = COALESCE(:name, name),
+    price = COALESCE(:price, price),
+    description = COALESCE(:description, description),
+    stock = COALESCE(:stock, stock),
+    updated_at = :updated_at!
+WHERE id = :id!
+RETURNING *;

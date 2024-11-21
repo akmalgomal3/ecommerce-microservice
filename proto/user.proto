@@ -19,6 +19,7 @@ message MetaResponse {
 service UserService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
 }
 
 message RegisterRequest {
@@ -53,5 +54,21 @@ message LoginResponse {
 
   message LoginData {
     string token = 1;
+  }
+}
+
+message DeleteUserRequest {
+  string username = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+  int32 code = 2;
+  UserData data = 3;
+  ErrorResponse error = 4;
+  MetaResponse meta = 5;
+
+  message UserData {
+    string userId = 1;
   }
 }

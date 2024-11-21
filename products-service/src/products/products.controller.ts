@@ -11,6 +11,8 @@ import GetAllProductsRequest = product.GetAllProductsRequest;
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { createResponse } from '../../../common/response/response.util';
+import UpdateProductRequest = product.UpdateProductRequest;
+import UpdateProductResponse = product.UpdateProductResponse;
 
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -98,5 +100,47 @@ export class ProductController {
         limit: limit,
       },
     });
+  }
+
+  @GrpcMethod('ProductService', 'UpdateProduct')
+  @SetMetadata('role', ['seller'])
+  async updateProduct(
+    data: UpdateProductRequest,
+  ): Promise<UpdateProductResponse> {
+    try {
+      if (data.price != null && data.price <= 0) {
+        return createResponse(false, 400, null, {
+          message: 'Price must be greater than 0',
+          details: { field: 'price', value: data.price },
+        });
+      }
+
+      if (data.stock != null && data.stock <= 0) {
+        return createResponse(false, 400, null, {
+          message: 'Stock must be greater than 0',
+          details: JSON.stringify({ field: 'stock', value: data.stock }),
+        });
+      }
+      const response = await this.productService.updateProduct(
+        data.productId,
+        data.name,
+        data.price,
+        data.description,
+        data.stock,
+      );
+      return createResponse(true, 201, {
+        productId: response.id,
+        name: response.name,
+        price: response.price,
+        description: response.description,
+        stock: response.stock,
+        updatedAt: response.updated_at,
+      });
+    } catch (e) {
+      return createResponse(false, 400, null, {
+        message: 'Failed to change product data!',
+        details: e,
+      });
+    }
   }
 }

@@ -6,3 +6,8 @@ VALUES (:username!, :password!, :role!)
 /* @name ValidateUser */
 SELECT * FROM usersMs
          WHERE username = :username!;
+
+/* @name DeleteUser */
+DELETE FROM usersMs
+WHERE username = :username!
+RETURNING id;

@@ -6,6 +6,7 @@ import {
   getProductById,
   getTotalProductsCount,
   insertProduct,
+  updateProduct,
 } from '../../../queries/product.queries';
 
 @Injectable()
@@ -76,6 +77,43 @@ export class ProductService {
     try {
       const result = await getTotalProductsCount.run(undefined, client);
       return parseInt(result[0].count, 10);
+    } finally {
+      client.release();
+    }
+  }
+
+  async updateProduct(
+    productId: string,
+    name?: string | null,
+    price?: number | null,
+    description?: string | null,
+    stock?: number | null,
+  ): Promise<any> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const date = new Date();
+      const offset = 7 * 60;
+      const localDate = new Date(date.getTime() + offset * 60 * 1000);
+      const now = localDate.toISOString().replace('Z', '+07:00');
+
+      const result = await updateProduct.run(
+        {
+          name: name || null,
+          price: price || null,
+          description: description || null,
+          stock: stock || null,
+          updated_at: now,
+          id: productId,
+        },
+        client,
+      );
+      await client.query('COMMIT');
+      return result[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
     } finally {
       client.release();
     }

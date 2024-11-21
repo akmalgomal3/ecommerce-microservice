@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { Pool } from 'pg';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '../../../common/redis/redis.service';
-import { createUser, validateUser } from '../../../queries/user.queries';
+import { createUser, deleteUser, validateUser } from "../../../queries/user.queries";
 
 @Injectable()
 export class UserService {
@@ -70,5 +70,20 @@ export class UserService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async deleteUser(username: string): Promise<any> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await deleteUser.run({ username }, client);
+      await client.query('COMMIT');
+      return result[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new Error(`Failed to delete user: ${error.message}`);
+    } finally {
+      client.release();
+    }
   }
 }
