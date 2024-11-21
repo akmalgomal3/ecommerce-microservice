@@ -30,7 +30,7 @@ export class ProductController {
     if (data.stock <= 0) {
       return createResponse(false, 400, null, {
         message: 'Stock must be greater than 0',
-        details: { field: 'stock', value: data.stock },
+        details: JSON.stringify({ field: 'stock', value: data.stock }),
       });
     }
     try {

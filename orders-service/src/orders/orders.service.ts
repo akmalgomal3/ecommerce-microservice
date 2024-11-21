@@ -3,14 +3,14 @@ import { Pool } from 'pg';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, OrderDocument } from './orders.schema';
-import { RedisService } from '../../../common/redis/redis.service';
+import { getProductById } from '../../../queries/product.queries';
+import { updateProductStock } from '../../../queries/order.queries';
 
 @Injectable()
 export class OrderService {
   constructor(
     @Inject('DATABASE_POOL') private pool: Pool,
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
-    private redisService: RedisService,
   ) {}
 
   async createOrder(
@@ -21,30 +21,15 @@ export class OrderService {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const cachedProduct = await this.redisService.get(`product:${productId}`);
-      let product: { stock: number };
-      if (cachedProduct) {
-        product = JSON.parse(cachedProduct);
-      } else {
-        const result = await client.query(
-          'SELECT * FROM productsMs WHERE id = $1',
-          [productId],
-        );
-        product = result.rows[0];
-        await this.redisService.set(
-          `product:${productId}`,
-          JSON.stringify(product),
-          3600,
-        );
+      const product = await getProductById.run({ id: productId }, client);
+
+      if (!product || product.length === 0) {
+        new Error('Product not found');
       }
-      if (product.stock < quantity) {
-        throw new Error('Not enough stock');
+      if (product[0].stock < quantity) {
+        new Error('Not enough stock');
       }
-      await client.query(
-        'UPDATE productsMs SET stock = stock - $1 WHERE id = $2',
-        [quantity, productId],
-      );
-      await this.redisService.del(`product:${productId}`); // Clear cache after update
+      await updateProductStock.run({ productId, quantity }, client);
       const newOrder = new this.orderModel({
         userId,
         productId,
@@ -56,7 +41,7 @@ export class OrderService {
       return newOrder;
     } catch (error) {
       await client.query('ROLLBACK');
-      throw error;
+      throw new Error(`Order creation failed: ${error.message}`);
     } finally {
       client.release();
     }

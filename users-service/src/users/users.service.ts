@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { Pool } from 'pg';
 import { JwtService } from '@nestjs/jwt';
 import { RedisService } from '../../../common/redis/redis.service';
+import { createUser, validateUser } from '../../../queries/user.queries';
 
 @Injectable()
 export class UserService {
@@ -21,13 +22,13 @@ export class UserService {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-      const result = await client.query(
-        'INSERT INTO usersMs (username, password, role) VALUES ($1, $2, $3) RETURNING *',
-        [username, hashedPassword, role],
+      const result = await createUser.run(
+        { username, password: hashedPassword, role },
+        client,
       );
       await client.query('COMMIT');
       await this.redisService.del(`user:${username}`); // Clear cache after insert
-      return result.rows[0];
+      return result[0];
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -44,11 +45,8 @@ export class UserService {
     } else {
       const client = await this.pool.connect();
       try {
-        const result = await client.query(
-          'SELECT * FROM usersMs WHERE username = $1',
-          [username],
-        );
-        user = result.rows[0];
+        const result = await validateUser.run({ username }, client);
+        user = result[0];
         if (user) {
           await this.redisService.set(
             `user:${username}`,
